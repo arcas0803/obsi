@@ -303,6 +303,33 @@ void main() {
     expect(exporter.failureCount, 1);
   });
 
+  test('accepts empty partial-success responses as full success', () async {
+    final protobuf = OtlpHttpSpanExporter(
+      client: MockClient(
+        (_) async => http.Response.bytes(
+          _protobufPartialSuccess(0, ''),
+          200,
+          headers: {'content-type': 'application/x-protobuf'},
+        ),
+      ),
+    );
+    final json = OtlpHttpSpanExporter(
+      protocol: OtlpHttpProtocol.httpJson,
+      client: MockClient(
+        (_) async => http.Response(
+          jsonEncode({'partialSuccess': <String, Object?>{}}),
+          200,
+        ),
+      ),
+    );
+
+    await protobuf.export([_spanData()]);
+    await json.export([_spanData()]);
+
+    expect(protobuf.failureCount, 0);
+    expect(json.failureCount, 0);
+  });
+
   test('rejects oversized responses and does not retry them', () async {
     var attempts = 0;
     final exporter = OtlpHttpLogExporter(

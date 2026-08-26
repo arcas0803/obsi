@@ -349,7 +349,10 @@ abstract base class _OtlpHttpExporter {
     if (response.bodyBytes.isEmpty) return;
     if (protocol == OtlpHttpProtocol.httpProtobuf) {
       final partial = decodePartialSuccess(response.bodyBytes);
-      if (partial == null) return;
+      if (partial == null ||
+          (partial.rejectedItems == 0 && partial.message.isEmpty)) {
+        return;
+      }
       _failureCount++;
       throw OtlpPartialSuccessException(
         rejectedItems: partial.rejectedItems,
@@ -373,6 +376,7 @@ abstract base class _OtlpHttpExporter {
         .map((entry) => int.tryParse('${entry.value}') ?? 0)
         .fold(0, (total, value) => total + value);
     final message = partial['errorMessage']?.toString() ?? '';
+    if (rejected == 0 && message.isEmpty) return;
     _failureCount++;
     throw OtlpPartialSuccessException(
       rejectedItems: rejected,
