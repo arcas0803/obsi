@@ -16,9 +16,16 @@ void main() {
       );
       final resource = Resource({'service.name': 'obsi-collector-test'});
       final scope = InstrumentationScope('collector-test', version: '1.0.0');
-      final spans = OtlpHttpSpanExporter(endpoint: endpoint);
-      final logs = OtlpHttpLogExporter(endpoint: endpoint);
-      final metrics = OtlpHttpMetricExporter(endpoint: endpoint);
+      final environment = {'OTEL_EXPORTER_OTLP_ENDPOINT': endpoint.toString()};
+      final spans = OtlpHttpSpanExporter.fromEnvironment(
+        environment: environment,
+      );
+      final logs = OtlpHttpLogExporter.fromEnvironment(
+        environment: environment,
+      );
+      final metrics = OtlpHttpMetricExporter.fromEnvironment(
+        environment: environment,
+      );
 
       await spans.export([
         SpanData(
