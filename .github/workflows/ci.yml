@@ -32,7 +32,7 @@ jobs:
       - name: Verify pure Dart web compatibility
         run: dart compile js packages/obsi/example/obsi_example.dart -o /tmp/obsi_example.js
       - name: Upload LCOV reports
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: lcov-reports
           path: packages/*/coverage/lcov.info
