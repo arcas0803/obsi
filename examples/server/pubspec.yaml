@@ -1,0 +1,17 @@
+name: obsi_server_example
+description: Complete Obsi configuration for a Shelf HTTP server.
+publish_to: none
+
+environment:
+  sdk: ^3.12.1
+
+resolution: workspace
+
+dependencies:
+  obsi: ^1.0.0
+  obsi_exporter_otlp: ^1.0.0
+  obsi_instrumentation_shelf: ^1.0.0
+  shelf: ^1.4.2
+
+dev_dependencies:
+  lints: ^6.0.0

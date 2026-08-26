@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  workflow_call:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+      - name: Analyze workspace
+        run: flutter analyze --fatal-infos
+      - name: Validate API documentation and links
+        run: bash tool/validate_docs.sh
+      - name: Run all tests with coverage
+        run: bash tool/run_coverage.sh
+      - name: Verify pure Dart web compatibility
+        run: dart compile js packages/obsi/example/obsi_example.dart -o /tmp/obsi_example.js
+      - name: Upload LCOV reports
+        uses: actions/upload-artifact@v6
+        with:
+          name: lcov-reports
+          path: packages/*/coverage/lcov.info
+          if-no-files-found: error
+
+  otlp-collector:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Verify OTLP Protobuf with OpenTelemetry Collector
+        run: |
+          docker run --name obsi-otelcol --detach --publish 4318:4318 \
+            --volume "$PWD/tool/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro" \
+            otel/opentelemetry-collector-contrib:0.159.0
+          trap 'docker logs obsi-otelcol; docker stop obsi-otelcol' EXIT
+          for attempt in {1..30}; do
+            if curl --silent --output /dev/null http://127.0.0.1:4318/; then
+              break
+            fi
+            sleep 1
+          done
+          OTEL_COLLECTOR_INTEGRATION=true flutter test \
+            packages/obsi_exporter_otlp/test/otlp_collector_integration_test.dart
+
+  publish-dry-run:
+    needs: [quality, otlp-collector]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Validate every pub.dev package
+        run: |
+          for package in packages/*; do
+            if [ -f "$package/pubspec.yaml" ]; then
+              (cd "$package" && flutter pub publish --dry-run)
+            fi
+          done

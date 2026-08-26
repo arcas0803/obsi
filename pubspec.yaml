@@ -1,0 +1,16 @@
+name: obsi_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.12.1
+
+workspace:
+  - examples/cli
+  - examples/server
+  - packages/*
+  - packages/obsi_error_crashlytics/example
+  - packages/obsi_flutter/example
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6

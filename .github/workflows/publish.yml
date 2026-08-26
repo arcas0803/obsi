@@ -1,0 +1,44 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'obsi-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'obsi_exporter_otlp-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'obsi_error_sentry-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'obsi_error_crashlytics-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'obsi_flutter-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'obsi_instrumentation_dio-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'obsi_instrumentation_http-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'obsi_instrumentation_shelf-v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: pub.dev
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      # setup-dart configures pub.dev OIDC credentials. Publishing uses the
+      # Flutter wrapper because this workspace also contains Flutter packages.
+      - uses: dart-lang/setup-dart@v1
+      - id: package
+        name: Resolve package from tag
+        shell: bash
+        run: |
+          name="${GITHUB_REF_NAME%-v*}"
+          test -f "packages/$name/pubspec.yaml"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+      - run: flutter pub get
+      - name: Publish package
+        working-directory: packages/${{ steps.package.outputs.name }}
+        run: flutter pub publish --force

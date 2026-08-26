@@ -1,0 +1,19 @@
+name: obsi_instrumentation_shelf
+description: Production Shelf server tracing and metrics middleware for Obsi.
+version: 1.0.0
+repository: https://github.com/arcas0803/obsi
+issue_tracker: https://github.com/arcas0803/obsi/issues
+topics: [observability, shelf, server, tracing, metrics]
+
+environment:
+  sdk: ^3.12.1
+
+resolution: workspace
+
+dependencies:
+  obsi: ^1.0.0
+  shelf: ^1.4.2
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6

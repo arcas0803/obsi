@@ -1,0 +1,22 @@
+name: obsi_flutter
+description: Production Flutter error capture and Navigator telemetry for Obsi.
+version: 1.0.0
+repository: https://github.com/arcas0803/obsi
+issue_tracker: https://github.com/arcas0803/obsi/issues
+topics: [observability, navigation, errors, tracing, flutter]
+
+environment:
+  sdk: ^3.12.1
+  flutter: ">=3.38.0"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  obsi: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  lints: ^6.0.0
