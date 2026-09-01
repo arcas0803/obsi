@@ -100,6 +100,54 @@ keep bounded queues and export outside the main execution path. The
 `Simple...Processor` variants deliver each item immediately and are useful for
 tests and small programs.
 
+### Human-friendly console output
+
+The default console exporters continue to emit one JSON object per record. This
+is useful for CI, log collectors, and other machine consumers. During local
+development, use the named `pretty` constructors for readable, colored output:
+
+```dart
+const pretty = PrettyConsoleOptions(
+  colors: true,
+  includeResource: false,
+  includeTraceContext: true,
+  includeStackTrace: true,
+);
+
+final provider = ObsiProvider(
+  traces: TracerProvider(
+    processor: BatchSpanProcessor(
+      const ConsoleSpanExporter.pretty(options: pretty),
+    ),
+  ),
+  logs: LoggerProvider(
+    processor: BatchLogProcessor(
+      const ConsoleLogExporter.pretty(options: pretty),
+    ),
+  ),
+  metrics: MeterProvider(
+    readers: [
+      PeriodicMetricReader(
+        const ConsoleMetricExporter.pretty(options: pretty),
+      ),
+    ],
+  ),
+  errors: ErrorManager(
+    exporter: const ConsoleErrorExporter.pretty(options: pretty),
+  ),
+);
+```
+
+Pretty output prioritizes severity or signal type, scope, message, duration,
+attributes, trace correlation, metric points, span events, error breadcrumbs,
+and stack traces. Set `colors: false` for terminals without ANSI support. Other
+options can hide timestamps, scope, trace context, resources, or stack traces;
+print attributes on separate lines; and bound displayed value lengths.
+
+Every console exporter also accepts a `writer` callback. For example, Flutter
+applications can pass `debugPrint`, while tests can collect output in a list.
+The callback changes only the destination, not JSON or pretty formatting.
+
 ## Tracing: follow an operation
 
 A trace represents a complete operation. Each `Span` is one step within it.

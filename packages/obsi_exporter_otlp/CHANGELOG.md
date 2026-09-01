@@ -1,3 +1,7 @@
+## 1.0.1
+
+- Updated the `obsi` dependency baseline to 1.0.1.
+
 ## 1.0.0
 
 - Added production OTLP/HTTP trace, log, and metric export with binary Protocol

@@ -2,6 +2,8 @@
 library;
 
 export 'src/common/attributes.dart';
+export 'src/common/console_formatting.dart'
+    show ConsoleWriter, PrettyConsoleOptions;
 export 'src/common/diagnostics.dart' show TelemetryErrorHandler;
 export 'src/baggage/baggage.dart';
 export 'src/baggage/baggage_propagator.dart';

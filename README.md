@@ -24,6 +24,12 @@ context propagation, OTLP export, and focused framework instrumentations. The
 Each package README is its self-contained pub.dev manual, including examples,
 configuration, lifecycle rules, and a public API inventory.
 
+Core console exporters preserve newline-delimited JSON as their default output
+and also expose `ConsoleSpanExporter.pretty`, `ConsoleLogExporter.pretty`,
+`ConsoleMetricExporter.pretty`, and `ConsoleErrorExporter.pretty` for readable
+local development. See the [`obsi` console output guide](packages/obsi#human-friendly-console-output)
+for configuration and display options.
+
 ## Project goals
 
 - A dependency-free pure Dart core with stable 1.x contracts.

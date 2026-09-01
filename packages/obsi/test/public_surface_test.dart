@@ -293,6 +293,135 @@ void main() {
     }
   });
 
+  test('console exporters offer human-friendly output', () async {
+    final printed = <String>[];
+    const options = PrettyConsoleOptions(
+      colors: false,
+      includeTimestamp: false,
+      includeTraceContext: false,
+      includeStackTrace: false,
+    );
+
+    await ConsoleSpanExporter.pretty(
+      options: options,
+      writer: printed.add,
+    ).export([_span()]);
+    await ConsoleLogExporter.pretty(
+      options: options,
+      writer: printed.add,
+    ).export([_log()]);
+    await ConsoleMetricExporter.pretty(
+      options: options,
+      writer: printed.add,
+    ).export([_metric()]);
+    await ConsoleErrorExporter.pretty(
+      options: options,
+      writer: printed.add,
+    ).export(_errorReport());
+
+    expect(printed, hasLength(4));
+    expect(
+      printed[0],
+      allOf(contains('SPAN'), contains('[test]'), contains('1.00 ms')),
+    );
+    expect(
+      printed[1],
+      allOf(contains('INFO'), contains('[test]'), contains('one=1')),
+    );
+    expect(
+      printed[2],
+      allOf(contains('METRIC'), contains('metric'), contains('1')),
+    );
+    expect(
+      printed[3],
+      allOf(contains('ERROR'), contains('exception'), contains('handled')),
+    );
+    for (final line in printed) {
+      expect(line, isNot(startsWith('{')));
+      expect(line, isNot(contains('\x1B[')));
+    }
+  });
+
+  test('pretty console options control details and ANSI colors', () async {
+    final printed = <String>[];
+    const options = PrettyConsoleOptions(
+      includeTimestamp: false,
+      includeResource: true,
+      multilineAttributes: true,
+    );
+
+    await ConsoleLogExporter.pretty(
+      options: options,
+      writer: printed.add,
+    ).export([_log()]);
+
+    expect(printed.single, contains('\x1B['));
+    expect(printed.single, contains('\n    one'));
+  });
+
+  test('pretty console exporters render rich telemetry details', () async {
+    final printed = <String>[];
+    const options = PrettyConsoleOptions(
+      colors: false,
+      includeResource: true,
+      includeScopeVersion: true,
+      maxValueLength: 32,
+    );
+
+    await ConsoleSpanExporter.pretty(
+      options: options,
+      writer: printed.add,
+    ).export([_richSpan()]);
+    await ConsoleLogExporter.pretty(
+      options: options,
+      writer: printed.add,
+    ).export([_richLog()]);
+    await ConsoleMetricExporter.pretty(
+      options: options,
+      writer: printed.add,
+    ).export([_histogramMetric(), _emptyMetric()]);
+    await ConsoleErrorExporter.pretty(
+      options: options,
+      writer: printed.add,
+    ).export(_richErrorReport());
+
+    expect(printed, hasLength(5));
+    expect(
+      printed[0],
+      allOf(
+        contains('checkout@test-version'),
+        contains('status'),
+        contains('parent'),
+        contains('events'),
+        contains('links'),
+        contains('dropped'),
+        contains('resource'),
+      ),
+    );
+    expect(
+      printed[1],
+      allOf(contains('FATAL'), contains('trace'), contains('stack')),
+    );
+    expect(
+      printed[2],
+      allOf(contains('avg=5.00 ms'), contains('≤ 5.0 ms'), contains('+Inf')),
+    );
+    expect(printed[3], contains('none'));
+    expect(
+      printed[4],
+      allOf([
+        contains('reason'),
+        contains('tags'),
+        contains('contexts'),
+        contains('breadcrumbs'),
+        contains('fingerprint'),
+        contains('attachments'),
+        contains('user'),
+        contains('stack'),
+      ]),
+    );
+  });
+
   test('periodic metric reader exports and shuts down once', () async {
     final exporter = _MetricExporter();
     final reader = PeriodicMetricReader(
@@ -339,6 +468,47 @@ SpanData _span() => SpanData(
   links: const [],
 );
 
+SpanData _richSpan() => SpanData(
+  name: 'checkout',
+  context: const SpanContext(
+    traceId: '11111111111111111111111111111111',
+    spanId: '2222222222222222',
+    sampled: true,
+  ),
+  parentSpanId: '3333333333333333',
+  kind: SpanKind.server,
+  startTime: DateTime.utc(2026),
+  endTime: DateTime.utc(2026).add(const Duration(seconds: 2)),
+  status: SpanStatus.error,
+  statusDescription: 'gateway unavailable',
+  resource: Resource({'service.name': 'checkout'}),
+  instrumentationScope: InstrumentationScope(
+    'checkout',
+    version: 'test-version',
+  ),
+  attributes: const {'http.response.status_code': 503},
+  events: [
+    SpanEvent(
+      name: 'request.sent',
+      timestamp: DateTime.utc(2026).add(const Duration(milliseconds: 50)),
+      attributes: const {'attempt': 1},
+    ),
+  ],
+  links: [
+    SpanLink(
+      const SpanContext(
+        traceId: '44444444444444444444444444444444',
+        spanId: '5555555555555555',
+        sampled: true,
+      ),
+      attributes: const {'type': 'retry'},
+    ),
+  ],
+  droppedAttributes: 1,
+  droppedEvents: 2,
+  droppedLinks: 3,
+);
+
 LogRecord _log() => LogRecord(
   timestamp: DateTime.utc(2026),
   observedTimestamp: DateTime.utc(2026),
@@ -347,6 +517,23 @@ LogRecord _log() => LogRecord(
   attributes: const {'one': 1},
   resource: Resource.empty,
   instrumentationScope: InstrumentationScope('test'),
+);
+
+LogRecord _richLog() => LogRecord(
+  timestamp: DateTime.utc(2026),
+  observedTimestamp: DateTime.utc(2026),
+  severity: LogSeverity.fatal,
+  body: 'payment failed',
+  attributes: const {'retryable': false},
+  spanContext: const SpanContext(
+    traceId: '11111111111111111111111111111111',
+    spanId: '2222222222222222',
+    sampled: true,
+  ),
+  error: StateError('declined'),
+  stackTrace: StackTrace.fromString('#0 checkout (checkout.dart:1)'),
+  resource: Resource({'service.name': 'checkout'}),
+  instrumentationScope: InstrumentationScope('checkout'),
 );
 
 MetricData _metric() => MetricData(
@@ -363,6 +550,38 @@ MetricData _metric() => MetricData(
       value: 1,
     ),
   ],
+);
+
+MetricData _histogramMetric() => MetricData(
+  name: 'request.duration',
+  kind: InstrumentKind.histogram,
+  description: 'Request duration',
+  unit: 'ms',
+  resource: Resource({'service.name': 'checkout'}),
+  instrumentationScope: InstrumentationScope('checkout'),
+  temporality: AggregationTemporality.cumulative,
+  points: [
+    MetricPoint(
+      attributes: const {'route': '/checkout'},
+      timestamp: DateTime.utc(2026),
+      count: 2,
+      sum: 10,
+      min: 4,
+      max: 6,
+      boundaries: const [5],
+      bucketCounts: const [1, 1],
+    ),
+  ],
+);
+
+MetricData _emptyMetric() => MetricData(
+  name: 'empty',
+  kind: InstrumentKind.gauge,
+  description: null,
+  unit: null,
+  resource: Resource.empty,
+  instrumentationScope: InstrumentationScope('test'),
+  points: const [],
 );
 
 ErrorReport _errorReport() => ErrorReport(
@@ -383,6 +602,44 @@ ErrorReport _errorReport() => ErrorReport(
   fingerprint: const [],
   breadcrumbs: const [],
   attachments: const [],
+);
+
+ErrorReport _richErrorReport() => ErrorReport(
+  id: const ErrorId('error-rich'),
+  timestamp: DateTime.utc(2026),
+  exception: StateError('declined'),
+  message: 'payment failed',
+  stackTrace: StackTrace.fromString('#0 checkout (checkout.dart:1)'),
+  severity: ErrorSeverity.fatal,
+  fatal: true,
+  handled: false,
+  mechanism: ErrorMechanism.zone,
+  reason: 'gateway rejected payment',
+  resource: Resource({'service.name': 'checkout'}),
+  instrumentationScope: InstrumentationScope('checkout'),
+  attributes: const {'retryable': false},
+  tags: const {'environment': 'test'},
+  contexts: const {
+    'device': {'model': 'test'},
+  },
+  fingerprint: const ['payment', 'declined'],
+  breadcrumbs: [
+    ErrorBreadcrumb(
+      timestamp: DateTime.utc(2026).subtract(const Duration(milliseconds: 20)),
+      category: 'payment',
+      message: 'requested',
+      data: const {'method': 'card'},
+    ),
+  ],
+  attachments: [
+    ErrorAttachment(filename: 'request.txt', bytes: const [1, 2, 3]),
+  ],
+  user: ErrorUser(id: 'user-1', data: const {'plan': 'premium'}),
+  spanContext: const SpanContext(
+    traceId: '11111111111111111111111111111111',
+    spanId: '2222222222222222',
+    sampled: true,
+  ),
 );
 
 final class _SpanExporter implements SpanExporter {

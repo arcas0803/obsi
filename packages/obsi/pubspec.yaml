@@ -1,6 +1,6 @@
 name: obsi
 description: Production-focused tracing, logging, metrics, errors, and W3C context propagation for pure Dart.
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/arcas0803/obsi
 issue_tracker: https://github.com/arcas0803/obsi/issues
 topics: [observability, tracing, logging, metrics, errors]

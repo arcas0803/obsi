@@ -8,8 +8,8 @@ environment:
 resolution: workspace
 
 dependencies:
-  obsi: ^1.0.0
-  obsi_exporter_otlp: ^1.0.0
+  obsi: ^1.0.1
+  obsi_exporter_otlp: ^1.0.1
 
 dev_dependencies:
   lints: ^6.0.0

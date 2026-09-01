@@ -79,6 +79,25 @@ Future<void> main() async {
 Production applications normally replace console exporters with OTLP, Sentry,
 Crashlytics, or custom exporters.
 
+For readable local output, all four core console exporters provide a `pretty`
+constructor. Flutter applications can route complete records through
+`debugPrint` so long stack traces are handled by Flutter's console integration:
+
+```dart
+final prettyLogs = ConsoleLogExporter.pretty(
+  options: const PrettyConsoleOptions(colors: true),
+  writer: debugPrint,
+);
+
+final logs = LoggerProvider(
+  processor: BatchLogProcessor(prettyLogs),
+);
+```
+
+The same API is available on `ConsoleSpanExporter.pretty`,
+`ConsoleMetricExporter.pretty`, and `ConsoleErrorExporter.pretty`. Their
+unnamed constructors continue to emit newline-delimited JSON.
+
 ## Capturing Flutter errors
 
 `ObsiFlutterErrorIntegration` captures:

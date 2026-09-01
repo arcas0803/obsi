@@ -1,3 +1,8 @@
+## 1.0.1
+
+- Updated the `obsi` dependency baseline to 1.0.1 and documented readable
+  console output for Flutter development.
+
 ## 1.0.0
 
 - Added production Navigator push, pop, replace, remove, top-route, and gesture

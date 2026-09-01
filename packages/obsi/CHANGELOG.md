@@ -1,3 +1,11 @@
+## 1.0.1
+
+- Added opt-in human-friendly console formatting for spans, logs, metrics, and
+  errors while preserving newline-delimited JSON as the default.
+- Added shared presentation controls for ANSI colors, timestamps, scope and
+  trace context, resources, stack traces, multiline attributes, value bounds,
+  and custom console writers.
+
 ## 1.0.0
 
 - Initial pure Dart observability core with tracing, logs, metrics, errors,
