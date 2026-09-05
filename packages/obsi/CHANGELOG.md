@@ -1,3 +1,9 @@
+## 1.1.0
+
+- Added compact semantic trace summaries, configurable diagnostic detail,
+  readable exceptions, and bounded local trace trees across export batches.
+- Preserved JSON output and const pretty constructors; tree mode is opt-in.
+
 ## 1.0.1
 
 - Added opt-in human-friendly console formatting for spans, logs, metrics, and

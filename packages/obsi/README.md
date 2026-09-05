@@ -150,6 +150,70 @@ The callback changes only the destination, not JSON or pretty formatting.
 
 ## Tracing: follow an operation
 
+### Compact traces and local trees (1.1.0)
+
+`ConsoleSpanExporter.pretty()` now summarizes completed operations using HTTP
+and navigation attributes when present. JSON remains the unnamed constructor's
+default. Existing `const ConsoleSpanExporter.pretty()` calls remain valid.
+
+```dart
+const exporter = ConsoleSpanExporter.pretty(
+  options: PrettyConsoleOptions(colors: false),
+  traceOptions: PrettyTraceOptions(
+    detail: TraceConsoleDetail.standard,
+    expandErrors: true,
+    slowThreshold: Duration(milliseconds: 500),
+    maxStackFrames: 8,
+    maxAttributes: 6,
+  ),
+);
+```
+
+```text
+14:32:10.125 HTTP   [http] GET api.example.com/products → 200 · 84.00 ms
+14:32:11.420 HTTP   [http] POST api.example.com/checkout → 503 · 920.00 ms  ERROR  SLOW
+  exception   HttpException: Service unavailable
+  stack
+    #0 CheckoutRepository.submit (checkout_repository.dart:84)
+```
+
+`SLOW` is independent of error status. Unset span status is not labelled OK.
+HTTP summaries omit URL credentials, query strings and fragments. Sanitize data
+before recording it: verbose mode can display original recorded attributes.
+
+Choose `minimal` for summaries, `standard` for bounded attributes and expanded
+errors, or `verbose` for all attributes, events, links and stack frames. Failed
+spans show full trace/span IDs when `includeTraceContext` is enabled. Stacks
+retain execution order; omitted frames and attributes are counted explicitly.
+Exceptions can only be displayed when recorded as exception events.
+
+For parent/child relationships across export batches, use the non-const tree
+constructor:
+
+```dart
+final exporter = ConsoleSpanExporter.tree(
+  options: const PrettyConsoleOptions(colors: false),
+  traceOptions: const PrettyTraceOptions(
+    groupWait: Duration(milliseconds: 200),
+    maxBufferedSpans: 1000,
+  ),
+);
+final processor = SimpleSpanProcessor(exporter);
+```
+
+Trees group by trace ID and order children by start time, with signed offsets
+relative to the first displayed root. Every tree is labelled `LOCAL / PARTIAL`:
+an exporter cannot know whether remote, sampled-out or still-running spans are
+missing. The fixed window starts on the first received span. Late spans produce
+another partial block with the same trace ID. At capacity, the oldest buffered
+group is emitted immediately. Each tree is sent in a single writer call.
+
+`await exporter.forceFlush()` drains trees immediately; shutdown also drains
+them and cancels timers. Processor flush waits for export acceptance, so call
+the exporter's flush afterwards when you need immediate tree output. Timer
+writer failures are reported by the next export, flush or shutdown. The
+`writer` callback is also available for Flutter's `debugPrint`.
+
 A trace represents a complete operation. Each `Span` is one step within it.
 `trace()` creates a span, makes it current inside the callback, records failures,
 and ends it when the callback completes.

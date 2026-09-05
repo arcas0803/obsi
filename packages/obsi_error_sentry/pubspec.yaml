@@ -1,6 +1,6 @@
 name: obsi_error_sentry
 description: Production Sentry error reporting exporter for the Obsi SDK.
-version: 1.0.1
+version: 1.1.0
 repository: https://github.com/arcas0803/obsi
 issue_tracker: https://github.com/arcas0803/obsi/issues
 topics: [observability, errors, sentry, crash-reporting]
@@ -11,7 +11,7 @@ environment:
 resolution: workspace
 
 dependencies:
-  obsi: ^1.0.1
+  obsi: ^1.1.0
   sentry: ^9.27.0
 
 dev_dependencies:

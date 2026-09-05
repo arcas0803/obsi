@@ -10,8 +10,8 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  obsi: ^1.0.1
-  obsi_flutter: ^1.0.1
+  obsi: ^1.1.0
+  obsi_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:

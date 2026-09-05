@@ -98,6 +98,13 @@ The same API is available on `ConsoleSpanExporter.pretty`,
 `ConsoleMetricExporter.pretty`, and `ConsoleErrorExporter.pretty`. Their
 unnamed constructors continue to emit newline-delimited JSON.
 
+Since 1.1.0, pretty traces summarize HTTP and navigation operations. Pass
+`traceOptions: const PrettyTraceOptions(maxStackFrames: 8)` to configure detail
+and error expansion. Use `ConsoleSpanExporter.tree(writer: debugPrint)` for
+bounded local parent/child groups across batches, and call its `forceFlush()`
+for immediate output. Tree groups are explicitly partial; they cannot represent
+unreceived remote spans. See the core Obsi README for all trace options.
+
 ## Capturing Flutter errors
 
 `ObsiFlutterErrorIntegration` captures:
