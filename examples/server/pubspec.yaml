@@ -8,9 +8,9 @@ environment:
 resolution: workspace
 
 dependencies:
-  obsi: ^1.0.1
-  obsi_exporter_otlp: ^1.0.1
-  obsi_instrumentation_shelf: ^1.0.1
+  obsi: ^1.1.0
+  obsi_exporter_otlp: ^1.1.0
+  obsi_instrumentation_shelf: ^1.1.0
   shelf: ^1.4.2
 
 dev_dependencies:

@@ -16,6 +16,7 @@ export 'src/api/span.dart';
 export 'src/api/span_context.dart';
 export 'src/api/tracer.dart';
 export 'src/export/console_span_exporter.dart';
+export 'src/export/pretty_trace_options.dart';
 export 'src/export/span_exporter.dart';
 export 'src/errors/console_error_exporter.dart';
 export 'src/errors/error_api.dart';

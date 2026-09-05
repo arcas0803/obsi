@@ -1,6 +1,6 @@
 name: obsi_exporter_otlp
 description: Production OTLP HTTP/Protobuf and HTTP/JSON exporters for Obsi.
-version: 1.0.1
+version: 1.1.0
 repository: https://github.com/arcas0803/obsi
 issue_tracker: https://github.com/arcas0803/obsi/issues
 topics: [observability, opentelemetry, otlp, tracing, metrics]
@@ -12,7 +12,7 @@ resolution: workspace
 
 dependencies:
   http: ^1.6.0
-  obsi: ^1.0.1
+  obsi: ^1.1.0
 
 dev_dependencies:
   lints: ^6.0.0
